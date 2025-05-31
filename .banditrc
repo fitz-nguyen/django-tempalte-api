@@ -1,0 +1,4 @@
+[bandit]
+exclude_dirs: tests,tests.py,test_constants.py,migrations,virtualenv,hosting,templates:
+skips: B413,B601,B501,B602,B605
+

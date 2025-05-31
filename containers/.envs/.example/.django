@@ -1,0 +1,5 @@
+# General
+# ------------------------------------------------------------------------------
+USE_DOCKER=yes
+ENVIRONMENT=development
+DATABASE_URL=postgres://dbadmin:123456@localhost:6432/goldfish

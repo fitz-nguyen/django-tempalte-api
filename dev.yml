@@ -1,0 +1,85 @@
+version: '3'
+
+volumes:
+  ipython_data:
+
+services:
+
+  postgres:
+    build:
+      context: .
+      dockerfile: ./containers/postgres/Dockerfile
+    volumes:
+      - ./containers/data/postgres:/var/lib/postgresql/data
+      - ./backups:/backups
+    env_file:
+      - ./containers/.envs/.local/.postgres
+
+  redis:
+    image: redis:6.0-rc4-alpine
+
+  api:
+    image: template-api
+    build:
+      context: .
+      dockerfile: containers/django/Dockerfile-dev
+    command: /usr/src/api/gunicorn.sh
+    depends_on:
+      - postgres
+      - redis
+    environment:
+      - DJANGO_SETTINGS_MODULE=config.settings.local
+    env_file:
+      - ./containers/.envs/.local/.postgres
+    volumes:
+      - ./api:/usr/src/api
+      - ipython_data:/root/.ipython
+    links:
+      - postgres
+      - redis
+
+  worker:
+    image: template-api
+    command: "celery -A apps.core worker -P eventlet -c 5"
+    depends_on:
+      - postgres
+      - redis
+    environment:
+      - DJANGO_SETTINGS_MODULE=config.settings.local
+    env_file:
+      - ./containers/.envs/.local/.postgres
+    volumes:
+      - ./api:/usr/src/api
+    links:
+      - postgres
+      - redis
+
+  beat:
+    image: template-api
+    command: "celery -A apps.core beat"
+    depends_on:
+      - postgres
+      - redis
+    environment:
+      - DJANGO_SETTINGS_MODULE=config.settings.local
+    env_file:
+      - ./containers/.envs/.local/.postgres
+    volumes:
+      - ./api:/usr/src/api
+    links:
+      - postgres
+      - redis
+
+  nginx:
+    build:
+      context: .
+      dockerfile: containers/nginx/Dockerfile
+    volumes:
+      - ./containers/nginx/conf.d:/etc/nginx/conf.d
+      - ./containers/nginx/sites-enabled:/etc/nginx/sites-enabled
+      - ./api/staticfiles:/usr/src/api_staticfiles
+      - ./api/media:/usr/src/api_media
+    links:
+      - api
+    ports:
+      - 8000:80

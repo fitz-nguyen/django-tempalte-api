@@ -1,0 +1,19 @@
+<html lang="en">
+
+<head>
+</head>
+
+<body>
+  <p>Hi {{ to_user }},</p>
+  <p>
+    You have been invited to join the <b> {{ campaign_name }}</b> campaign owned by <b> {{ candidate_name }}</b> on
+    Kingmarker Data. To get started, accept the invite below: <br>
+    <a clicktracking=off href="{{ activate_url }}">Active link</a>
+  </p>
+  <p>This invitation will expire in 7 days. <br>If it's a mistake, please simply ignore this email.</p>
+
+  <p>Thank you,<br>
+    The Django Template Team.</p>
+</body>
+
+</html>

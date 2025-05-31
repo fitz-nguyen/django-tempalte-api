@@ -1,0 +1,57 @@
+{
+  "name": "demo",
+  "gfc": {
+    "profile": "demo"
+  },
+  "version": "0.0.1",
+  "scripts": {
+    "start": "./manage.py runserver 0.0.0.0:8000",
+    "setup:all": "npm run setup:config && npm run setup:venv && setup:db",
+    "setup:config": "cp -r ./containers/.envs/.example ./containers/.envs/.local && cp ./api/config/settings/.env.template ./api/config/settings/.env && sed -i.bak s,DATABASE_URL.*,DATABASE_URL=postgres://django_template:123456@postgres:5432/django_template,g ./api/config/settings/.env",
+    "setup:venv": "virtualenv venv && source ./venv/bin/activate && pip install -r api/requirements/local.txt",
+    "setup:db": "ENVIRONMENT=${ENVIRONMENT:=local} docker-compose -f docker-compose-api.yml exec api bash ./api/setup-db.sh",
+    "setup:db:seeds": "ENVIRONMENT=${ENVIRONMENT:=local} ./api/setup-db-seeds.sh",
+    "setup:api:credentials": "ENVIRONMENT=${ENVIRONMENT:=local} ./api/setup-api-credentials.sh",
+    "docker:purge": "docker stop $(docker ps -aq); docker rm $(docker ps -aq); docker rmi $(docker images -q -f 'dangling=true')",
+    "docker:api:build": "ENVIRONMENT=${ENVIRONMENT:=local} docker-compose -f docker-compose-api.yml build --build-arg ENVIRONMENT=${ENVIRONMENT:=local}",
+    "docker:api:up": "ENVIRONMENT=${ENVIRONMENT:=local} docker-compose -f docker-compose-api.yml up",
+    "docker:api:stop": "ENVIRONMENT=${ENVIRONMENT:=local} docker-compose -f docker-compose-api.yml stop",
+    "docker:api:down": "ENVIRONMENT=${ENVIRONMENT:=local} docker-compose -f docker-compose-api.yml down",
+    "docker:api:exec": "ENVIRONMENT=${ENVIRONMENT:=local} docker-compose -f docker-compose-api.yml exec api bash",
+    "docker:api:exec:createsuperuser": "ENVIRONMENT=${ENVIRONMENT:=local} docker-compose -f docker-compose-api.yml exec api sh -c 'cd /usr/src/api && python3 ./manage.py createsuperuser --settings=config.settings.${ENVIRONMENT:=local}'",
+    "docker:api:exec:db:makemigrations": "ENVIRONMENT=${ENVIRONMENT:=local} docker-compose -f docker-compose-api.yml exec api sh -c 'cd /usr/src/api && python3 ./manage.py makemigrations --settings=config.settings.${ENVIRONMENT:=local}'",
+    "docker:api:exec:db:migrate": "ENVIRONMENT=${ENVIRONMENT:=local} docker-compose -f docker-compose-api.yml exec api sh -c 'cd /usr/src/api && python3 ./manage.py migrate --settings=config.settings.${ENVIRONMENT:=local}'",
+    "docker:api:exec:create:locale": "ENVIRONMENT=${ENVIRONMENT:=local} docker-compose -f docker-compose-api.yml exec api sh -c 'cd /usr/src/api && python3 ./manage.py makemessages -l 'en-us' --settings=config.settings.${ENVIRONMENT:=local}'",
+    "docker:api:exec:compile:locale": "ENVIRONMENT=${ENVIRONMENT:=local} docker-compose e-f docker-compose-api.yml xec api sh -c 'cd /usr/src/api && python3 ./manage.py compilemessages -l 'en-us' --settings=config.settings.${ENVIRONMENT:=local}'",
+    "docker:api:exec:coverage": "ENVIRONMENT=${ENVIRONMENT:=local} docker-compose -f docker-compose-api.yml exec api sh -c 'cd /usr/src/api && coverage run --source=app ./manage.py test app'",
+    "docker:api:exec:coverage:report": "npm run docker:exec:coverage; docker-compose -f docker-compose-api.yml exec api coverage html",
+    "docker:api:exec:check:bandit": "ENVIRONMENT=${ENVIRONMENT:=local} docker-compose -f docker-compose-api.yml exec api sh -c 'cd /usr/src/api && poetry install && poetry run bandit -r ./app/**/*.py'",
+    "docker:elk:build": "ENVIRONMENT=${ENVIRONMENT:=local} docker-compose -f docker-compose-elk.yml build",
+    "docker:elk:up": "ENVIRONMENT=${ENVIRONMENT:=local} docker-compose -f docker-compose-elk.yml up",
+    "docker:elk:stop": "ENVIRONMENT=${ENVIRONMENT:=local} docker-compose -f docker-compose-elk.yml stop",
+    "docker:elk:down": "ENVIRONMENT=${ENVIRONMENT:=local} docker-compose -f docker-compose-elk.yml down",
+    "tf:aws:deploy": "ENVIRONMENT=${ENVIRONMENT:=development} AWS_PROFILE=$npm_package_gfc_profile TERRAFORM_REGION=${TERRAFORM_REGION:=us-east-1} ./hosting/scripts/generate-terraform-backend.js --services vpc,ec2 --provider aws --region ${TERRAFORM_REGION}",
+    "tf:aws:apply:service": "ENVIRONMENT=${ENVIRONMENT:=development} AWS_PROFILE=$npm_package_gfc_profile TERRAFORM_REGION=${TERRAFORM_REGION:=us-east-1} ./hosting/scripts/generate-terraform-backend.js --services $npm_config_service --provider aws --region ${TERRAFORM_REGION}",
+    "tf:aws:deploy:fargate": "ENVIRONMENT=${ENVIRONMENT:=development} AWS_PROFILE=$npm_package_gfc_profile TERRAFORM_REGION=${TERRAFORM_REGION:=us-east-1} ./hosting/scripts/generate-terraform-backend.js --services vpc,iam,sns,db,ec2,secrets,ecr,ecs,route53,cloudwatch --provider aws --region ${TERRAFORM_REGION}",
+    "tf:aws:destroy": "ENVIRONMENT=${ENVIRONMENT:=development} AWS_PROFILE=$npm_package_gfc_profile TERRAFORM_REGION=${TERRAFORM_REGION:=us-east-1} ./hosting/scripts/generate-terraform-backend.js --services iam,vpc --destroy --provider aws --region ${TERRAFORM_REGION}",
+    "tf:azure:deploy": "ENVIRONMENT=${ENVIRONMENT:=development} ./hosting/scripts/generate-terraform-backend.js --services vpc,ad,log_analytics,key_vault,bastion,db,redis,blob,virtual_machines --provider azure",
+    "tf:azure:refresh": "ENVIRONMENT=${ENVIRONMENT:=development} ./hosting/scripts/generate-terraform-backend.js --services virtual_machines,bastion,db,redis,blob,key_vault,log_analytics,ad,vpc --refresh --provider azure",
+    "tf:azure:destroy": "ENVIRONMENT=${ENVIRONMENT:=development} ./hosting/scripts/generate-terraform-backend.js --services virtual_machines,blob,log_analytics,ad,redis,db,bastion,vpc --destroy --provider azure",
+    "creds:save": "ENVIRONMENT=${ENVIRONMENT:=local} PROVIDER=${PROVIDER:=aws} ./.credentials-save.sh",
+    "creds:sync": "ENVIRONMENT=${ENVIRONMENT:=local} PROVIDER=${PROVIDER:=aws} ./.credentials-sync.sh",
+    "api:settings:setup": "ENVIRONMENT=${ENVIRONMENT:=local} BASE_URL=${BASE_URL:=http://localhost} FRONTEND_BASE_URL=${FRONTEND_BASE_URL:=http://localhost} GITLABS_ACCESS_TOKEN=${GITLABS_ACCESS_TOKEN:=''} GITLAB_PROJECT_ID=${GITLAB_PROJECT_ID:=${PWD##*/}} ./.api-settings-setup.sh",
+    "pipeline:setup": "ENVIRONMENT=${ENVIRONMENT:=local} BASE_URL=${BASE_URL:=http://localhost} FRONTEND_BASE_URL=${FRONTEND_BASE_URL:=http://localhost} GITLABS_ACCESS_TOKEN=${GITLABS_ACCESS_TOKEN:=''} GITLAB_PROJECT_ID=${GITLAB_PROJECT_ID:=${PWD##*/}} ./.gitlab-pipeline-setup.sh",
+    "pipeline:deploy": "ENVIRONMENT=${ENVIRONMENT:=local} GITLABS_ACCESS_TOKEN=${GITLABS_ACCESS_TOKEN:=''} GITLAB_PROJECT_ID=${GITLAB_PROJECT_ID:=${PWD##*/}} ./.gitlab-pipeline-deploy.sh"
+  },
+  "dependencies": {
+    "aws-sdk": "^2.243.1",
+    "serverless": "^1.27.3",
+    "bluebird": "^3.5.1",
+    "commander": "^2.15.1",
+    "glob": "^7.1.3",
+    "moment": "^2.24.0"
+  },
+  "devDependencies": {
+    "node-cmd": "^3.0.0"
+  }
+}

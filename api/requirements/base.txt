@@ -1,0 +1,130 @@
+# Tools
+pre-commit
+
+# Django
+Django==5.1.1
+django-environ==0.11.2
+
+# Python-PostgreSQL Database Adapter
+psycopg2-binary==2.9.9
+
+# Models
+django-model-utils==5.0.0
+python-dateutil==2.9.0
+
+#tinymce
+django-tinymce==4.1.0
+
+# Utils
+django-ipware==7.0.1
+six===1.16.0
+
+# DRF
+djangorestframework==3.15.2
+django-oauth-toolkit==3.0.1
+django-cors-headers==4.4.0
+dj_rest_auth==7.0.0
+django-allauth==65.0.1
+six==1.16.0
+
+# Sendgird
+sendgrid-django==4.2.0
+
+# Static files
+# whitenoise==4.1.4  # https://github.com/evansd/whitenoise
+
+
+# Document
+drf-yasg==1.21.7
+
+# Celery
+celery==5.4.0
+redis==5.0.8
+django-celery-beat==2.7.0
+django-celery-results==2.5.1
+celery-once==3.0.1
+greenlet==3.1.1
+eventlet==0.37.0
+gevent==24.2.1
+
+# debug
+django_extensions==3.2.3
+django-debug-toolbar==4.4.6
+
+# WSGI Handler
+gunicorn==23.0.0
+# code coverage and testing
+django-webtest==1.9.12
+coverage==7.6.1
+
+# storage
+boto3==1.35.25
+django-storages==1.14.4
+Pillow==10.4.0
+# user-agent
+pyyaml==6.0.2
+ua-parser==0.18.0
+user-agents==2.2.0
+django-user-agents==0.4.0
+#phonenumbers==8.13.45
+
+# Faker
+#Faker==29.0.0
+
+# FCM
+fcm-django==2.2.1
+
+# Socket IO emitter
+socket.io-emitter==0.1.5.1
+
+# JWT
+PyJWT==2.9.0
+djangorestframework_simplejwt==5.3.1
+cryptography==43.0.1
+
+# Bug Service
+sentry-sdk==2.14.0
+bugsnag==4.7.1
+
+# (Mime type) Upload app
+python_magic==0.4.27
+
+# logstash
+python-logstash==0.4.8
+
+# tsvector-field
+#django-tsvector-field==0.9.4
+
+# Social core
+#social-auth-core==3.3.3
+
+# Fix celery
+vine==5.1.0
+
+
+
+# bdist_wheel
+wheel==0.44.0
+
+# Django cache memoize
+django-cache-memoize==0.2.0
+
+# django health check
+django-health-check==3.18.3
+
+#branch io
+branchio==0.1.1
+
+# thumbnail
+sorl-thumbnail==12.11.0
+
+# posgis
+postgis==1.0.4
+
+django-s3direct==2.0.3
+
+simplejson==3.19.3
+
+django-admin-cursor-paginator==0.1.6
+django-modeladmin-reorder==0.3.1
+django-admin-rangefilter==0.13.2

@@ -1,0 +1,4 @@
+{% load i18n %}{% autoescape off %}
+{% blocktrans %} {{actor_name}} invited you to join the {{campaign_name}} campaign on Kingmarker Data.
+{% endblocktrans %}
+{% endautoescape %}

@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Permits Filter</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Vue.js 1.x -->
+    <script src="https://cdn.jsdelivr.net/vue/1.0.28/vue.min.js"></script>
+    <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+    <!-- Bootstrap JavaScript -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+
+</head>
+<body>
+    <div id="app" class="container">
+        <h1>[[ filterId && filterId !== 'None' ? 'Update Advanced Filter' : 'Create Advanced Filter' ]]</h1>
+        <form @submit.prevent="submitForm">
+            <div class="form-group">
+                <label for="title">Title:</label>
+                <input type="text" id="title" v-model="title" class="form-control" placeholder="Enter title" :value="title" required>
+            </div>
+            <div class="form-group">
+                <label for="effective_date_from">Effective Date From:</label>
+                <input type="date" id="effective_date_from" v-model="effectiveDateFrom" class="form-control" :value="effectiveDateFrom">
+            </div>
+            <div class="form-group">
+                <label for="effective_date_to">Effective Date To:</label>
+                <input type="date" id="effective_date_to" v-model="effectiveDateTo" class="form-control" :value="effectiveDateTo">
+            </div>
+            <div class="form-group">
+                <label for="state">State:*</label>
+                <input type="text" id="state_search" v-model="searchState" @input="filterStates" class="form-control" placeholder="Search states" :disabled="isLoadingStates">
+                <select id="state" v-model="state" class="form-control" :value="state" :disabled="isLoadingStates" required>
+                    <option value="">Please select a state</option>
+                    <option v-for="stateOption in filteredStates" :value="stateOption.value" >
+                        [[ stateOption.text ]]
+                    </option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="city">City:</label>
+                <input type="text" id="city_search" v-model="searchCity" @input="filterCities" class="form-control" placeholder="Search cities" :disabled="isLoadingCities">
+                <select id="city" v-model="city" class="form-control" :value="city" :disabled="isLoadingCities">
+                    <option value="">Please select a city</option>
+                    <option v-for="cityOption in filteredCities" :value="cityOption.value">
+                        [[ cityOption.text ]]
+                    </option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="zip">ZIP Code:</label>
+                <input type="text" id="zip" v-model="zip" class="form-control" placeholder="Enter ZIP code" :value="zip">
+            </div>
+            <div class="form-group">
+                <label for="permit_type">Permit Type:</label>
+                <input type="text" id="permit_type_search" v-model="searchPermitType" @input="filterPermitTypes" class="form-control" placeholder="Search permit types" :disabled="isLoadingPermitTypes">
+                <select id="permit_type" v-model="permitType" class="form-control" :value="permitType" :disabled="isLoadingPermitTypes">
+                    <option value="">Please select a permit type</option>
+                    <option v-for="type in filteredPermitTypes" :value="type.value">
+                        [[ type.text ]]
+                    </option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="business_name">Permit Contractor (Business Name):</label>
+                <input type="text" id="business_name" v-model="businessName" class="form-control" placeholder="Enter permit contractor" :value="businessName">
+            </div>
+            <div class="form-group">
+                <label for="fileInput" class="file-label">Target CSV:</label>
+                <input type="file" ref="fileInput" @change="handleFileUpload" style="display: none;">
+                <div v-if="fileName" class="form-control-static mt-2">
+                    <span class="file-label">Target CSV:</span> [[ fileName ]]
+                    <a href="#" @click.prevent="clearFile" class="text-primary ml-2">clear</a>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <button type="submit" class="btn btn-primary" :disabled="isSubmitting || isUploading">
+                    Submit
+                </button>
+                <button type="button" class="btn btn-danger" @click="deleteFilter" v-if="filterId && filterId !== 'None'" :disabled="isSubmitting || isUploading">Delete</button>
+            </div>
+        </form>
+        <div v-if="message" :class="['alert', messageType === 'error' ? 'alert-danger' : 'alert-success']">
+            [[ message ]]
+        </div>
+    </div>
+
+    <script>
+    Vue.config.delimiters = ['[[', ']]'];
+
+    function decodeHtmlEntities(text) {
+        var textArea = document.createElement('textarea');
+        textArea.innerHTML = text;
+        return textArea.value;
+    }
+    vue = new Vue({
+        el: '#app',
+        delimiters: ['[[', ']]'],
+        data: {
+            filterId: '{{ filter_id }}',
+            baseUrl: '{{ base_url }}',
+            selectedOption: '',
+            searchOption: '',
+            effectiveDateFrom: '{{ effective_date_from }}',
+            effectiveDateTo: '{{ effective_date_to }}',
+            permitType: decodeHtmlEntities('{{ permit_type }}'),
+            searchPermitType: '',
+            state: '{{ state }}',
+            searchState: '',
+            city: decodeHtmlEntities('{{ city }}'),
+            searchCity: '',
+            zip: '{{ zip }}',
+            searchZip: '',
+            title: decodeHtmlEntities('{{ title }}'),
+            fileName: '{{ filename }}',
+            csvQuery: '{{ csv_query }}',
+            permitTypes: [ { value: 'option1', text: 'Option 1' },
+                { value: 'option2', text: 'Option 2' },
+                { value: 'option3', text: 'Option 3' },],
+            states: [],
+            cities: [
+                { value: 'option1', text: 'Option 1' },
+                { value: 'option2', text: 'Option 2' },
+                { value: 'option3', text: 'Option 3' },
+            ],
+            zipCodes: [],
+            filteredOptions: [],
+            filteredPermitTypes: [ { value: 'option1', text: 'Option 1' },
+                { value: 'option2', text: 'Option 2' },
+                { value: 'option3', text: 'Option 3' },],
+            filteredStates: [],
+            filteredCities: [],
+            filteredZipCodes: [],
+            itemsPerPage: 500, // Number of items to load per scroll
+            currentPermitPage: 1, // Current page of items loaded
+            currentStatePage: 1,
+            currentCityPage: 1,
+            isSubmitting: false,
+            message: '',
+            messageType: '',
+            dropdownLoadmoreMessage: "Please enter more text to get correct result",
+            isUploading: false,
+            isLoadingPermitTypes: false,
+            isLoadingStates: false,
+            isLoadingCities: false,
+            businessName: decodeHtmlEntities('{{ business_name }}'),
+        },
+        methods: {
+            testMethod: function() {
+                console.log('testMethod called');
+            },
+            submitForm: function() {
+                if (this.isSubmitting) return;
+                this.isSubmitting = true;
+
+                // Handle form submission
+                fetch(`${this.baseUrl}/v1/permit/filter/submit/${this.filterId ? `?_afilter=${this.filterId}` : ''}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        selectedOption: this.selectedOption,
+                        effectiveDateFrom: this.effectiveDateFrom,
+                        effectiveDateTo: this.effectiveDateTo,
+                        permitType: this.permitType,
+                        state: this.state,
+                        city: this.city,
+                        zip: this.zip,
+                        title: this.title,
+                        fileName: this.fileName,
+                        csvQuery: this.csvQuery,
+                        businessName: this.businessName, // Add this line
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        this.showMessage(data.error, 'error');
+                    } else {
+                        console.log('Form submitted successfully:', data);
+                        const filterId = this.filterId || data.id;
+                        window.location.href = `/admin/permits/buildingpermit/?_afilter=${filterId}`;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error submitting form:', error);
+                    this.showMessage('Error submitting form. Please try again.', 'error');
+                })
+                .finally(() => {
+                    this.isSubmitting = false;
+                });
+            },
+            filterOptions: function() {
+                this.filteredOptions = this.options.filter(option =>
+                    option.text.toLowerCase().includes(this.searchOption.toLowerCase())
+                );
+            },
+            handlerFilterResult: function(filterResult, defaultValue, dropdownList) {
+                if (filterResult.length > this.itemsPerPage) {
+                    filterResult = filterResult.slice(0, this.itemsPerPage);
+                    filterResult.push({ text: this.dropdownLoadmoreMessage });
+                }
+
+                if (defaultValue) {
+                    const defaultItem = dropdownList.find(item => item.value === defaultValue);
+                    if (defaultItem && !filterResult.some(item => item.value === defaultValue)) {
+                        filterResult.unshift(defaultItem);
+                    }
+                }
+                return filterResult;
+            },
+            filterPermitTypes: function() {
+                let filterResult = this.permitTypes.filter(type =>
+                    type.text.toLowerCase().includes(this.searchPermitType.toLowerCase())
+                );
+                this.filteredPermitTypes = this.handlerFilterResult(filterResult, this.permitType, this.permitTypes);
+            },
+            filterStates: function() {
+                filterResult = this.states.filter(state =>
+                    state.text.toLowerCase().includes(this.searchState.toLowerCase())
+                )
+
+                this.filteredStates = this.handlerFilterResult(filterResult, this.state, this.states);
+            },
+            filterCities: function() {
+                filterResult = this.cities.filter(city =>
+                    city.text.toLowerCase().includes(this.searchCity.toLowerCase())
+                );
+                this.filteredCities = this.handlerFilterResult(filterResult, this.city, this.cities);
+            },
+            filterZipCodes: function() {
+                this.filteredZipCodes = this.zipCodes.filter(zip =>
+                    zip.text.toLowerCase().includes(this.searchZip.toLowerCase())
+                );
+            },
+            processDropdownData: function(data) {
+                return data.map(item => ({
+                    value: decodeHtmlEntities(item),
+                    text: decodeHtmlEntities(item)
+                }));
+            },
+            fetchPermitTypes: function() {
+                this.isLoadingPermitTypes = true;
+                const url = new URL(`${this.baseUrl}/v1/permit/dropdown/permit-type/`);
+                if (this.state) {
+                    url.searchParams.append('state', this.state);
+                }
+                if (this.city) {
+                    url.searchParams.append('city', this.city.replace('"', '&quot;'));
+                }
+                fetch(url)
+                    .then(response => response.json())
+                    .then(data => {
+                        const processedData = this.processDropdownData(data);
+                        this.permitTypes = processedData;
+                        filterResult = processedData;
+                        this.filteredPermitTypes = this.handlerFilterResult(filterResult, this.permitType, this.permitTypes);
+                    })
+                    .catch(error => console.error('Error fetching permit types:', error))
+                    .finally(() => {
+                        this.isLoadingPermitTypes = false;
+                    });
+            },
+            fetchStates: function() {
+                this.isLoadingStates = true;
+                const url = new URL(`${this.baseUrl}/v1/permit/dropdown/state/`);
+                if (this.searchState) {
+                    url.searchParams.append('search', this.searchState.toLowerCase());
+                }
+                fetch(url)
+                    .then(response => response.json())
+                    .then(data => {
+                        const processedData = this.processDropdownData(data);
+                        this.states = processedData;
+                        filterResult = processedData;
+                        this.filteredStates = this.handlerFilterResult(filterResult, this.state, this.states);
+                    })
+                    .catch(error => console.error('Error fetching states:', error))
+                    .finally(() => {
+                        this.isLoadingStates = false;
+                    });
+            },
+            fetchCities: function() {
+                this.isLoadingCities = true;
+                const url = new URL(`${this.baseUrl}/v1/permit/dropdown/city/`);
+                if (this.state) {
+                    url.searchParams.append('state', this.state);
+                }
+                fetch(url)
+                    .then(response => response.json())
+                    .then(data => {
+                        const processedData = this.processDropdownData(data);
+                        this.cities = processedData;
+                        filterResult = processedData;
+                        this.filteredCities = this.handlerFilterResult(filterResult, this.city, this.cities);
+                    })
+                    .catch(error => console.error('Error fetching cities:', error))
+                    .finally(() => {
+                        this.isLoadingCities = false;
+                    });
+            },
+            fetchZipCodes: function() {
+                const url = new URL(`${this.baseUrl}/v1/permit/dropdown/zipcode/`);
+                if (this.permitType) {
+                    url.searchParams.append('permit_type', this.permitType);
+                }
+                if (this.state) {
+                    url.searchParams.append('state', this.state);
+                }
+                if (this.city) {
+                    url.searchParams.append('city', this.city.replace('"', '&quot;'));
+                }
+                fetch(url)
+                    .then(response => response.json())
+                    .then(data => {
+                        const processedData = this.processDropdownData(data);
+                        this.zipCodes = processedData;
+                        this.filteredZipCodes = processedData;
+                    })
+                    .catch(error => console.error('Error fetching zip codes:', error));
+            },
+            // onPermitTypeChange: function() {
+            onStateChange: function() {
+                // this.fetchStates();
+                this.fetchCities();
+                this.fetchPermitTypes();
+                this.fetchZipCodes();
+                // Reset dependent fields
+                this.type = '';
+                this.city = '';
+                // this.zip = '';
+            },
+            // onStateChange: function() {
+            onCityChange: function() {
+                this.fetchPermitTypes();
+                this.fetchZipCodes();
+                // Reset dependent fields
+                this.type = '';
+                // this.zip = '';
+            },
+            // onCityChange: function() {
+            onPermitTypeChange: function() {
+                this.fetchZipCodes();
+                // Reset dependent field
+                // this.zip = '';
+            },
+            triggerFileInput: function() {
+                this.$refs.fileInput.click();
+            },
+            handleFileUpload: function(event) {
+                const file = event.target.files[0];
+                if (!file) return;
+
+                const formData = new FormData();
+                formData.append('csv_file', file);
+
+                this.isUploading = true; // Set uploading state to true
+
+                fetch('/admin/permits/csv-filter/', {
+                    method: 'POST',
+                    body: formData,
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        return response.json().then(errorData => {
+                            throw new Error(errorData.error || 'Error uploading file');
+                        });
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    this.fileName = data.file_name;
+                    this.csvQuery = data.csv_query;
+                    this.showMessage('File uploaded successfully', 'success');
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    this.showMessage(error.message, 'error');
+                    this.clearFile();
+                })
+                .finally(() => {
+                    this.isUploading = false; // Set uploading state back to false
+                });
+            },
+            clearFile: function() {
+                console.log('clearFile method called');
+                this.fileName = '';
+                this.csvQuery = '';
+                this.$refs.fileInput.value = '';
+                this.$refs.fileInput.dispatchEvent(new Event('change'));
+            },
+            deleteFilter: function() {
+                if (confirm('Are you sure you want to delete this filter?')) {
+                    fetch(`${this.baseUrl}/v1/permit/filter/delete/?_afilter=${this.filterId}`, {
+                        method: 'DELETE',
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Error deleting filter');
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        console.log('Filter deleted successfully:', data);
+                        // Redirect to the BuildingPermit list page
+                        window.location.href = '/admin/permits/buildingpermit/';
+                    })
+                    .catch(error => {
+                        console.error('Error deleting filter:', error);
+                        // Handle any errors
+                        alert('Error deleting filter. Please try again.');
+                    });
+                }
+            },
+            updateTitle: function() {
+                let titleParts = [
+                    this.state,
+                    this.city,
+                    this.permitType,
+                    this.zip,
+                    this.formatDate(this.effectiveDateFrom),
+                    this.formatDate(this.effectiveDateTo)
+                ];
+
+                if (this.fileName) {
+                    let filename = this.fileName;
+                    filename = filename.replace(/\.(txt|csv)$/i, '');
+                    titleParts.push(filename);
+                }
+
+                // Filter out empty or undefined values, convert to lowercase, and replace spaces with underscores
+                titleParts = titleParts
+                    .filter(part => part && part.trim() !== '')
+                    .map(part => part.toLowerCase().replace(/\s+/g, '_'));
+
+                // Join parts and remove leading underscore if present
+                this.title = titleParts.join('_').replace(/^_/, '');
+            },
+            formatDate: function(dateString) {
+                if (!dateString) return '';
+                const date = new Date(dateString);
+                return date.getFullYear().toString() +
+                       (date.getMonth() + 1).toString().padStart(2, '0') +
+                       date.getDate().toString().padStart(2, '0');
+            },
+            showMessage: function(message, type) {
+                // Add this method to the Vue component
+                this.message = message;
+                this.messageType = type;
+                setTimeout(() => {
+                    this.message = '';
+                    this.messageType = '';
+                }, 10000); // Hide message after 10 seconds
+            },
+        },
+        created: function() {
+
+            this.fetchStates();
+            this.fetchCities();
+            this.fetchPermitTypes();
+            this.fetchZipCodes();
+            console.log('mounted method called');
+        },
+        watch: {
+            permitType: {
+                handler: function(newValue, oldValue) {
+                    if (newValue !== oldValue) {
+                        this.onPermitTypeChange();
+                        // this.updateTitle();
+                    }
+                },
+                immediate: true
+            },
+            state: function(newValue, oldValue) {
+                if (newValue !== oldValue) {
+                    this.onStateChange();
+                    // this.updateTitle();
+                }
+            },
+            city: function(newValue, oldValue) {
+                if (newValue !== oldValue) {
+                    this.onCityChange();
+                    // this.updateTitle();
+                }
+            },
+            // zip: 'updateTitle',
+            // effectiveDateFrom: 'updateTitle',
+            // effectiveDateTo: 'updateTitle',
+            // fileName: 'updateTitle'
+        }
+    });
+
+    </script>
+</body>
+</html>

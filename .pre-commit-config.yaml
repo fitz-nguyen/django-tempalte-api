@@ -1,0 +1,54 @@
+repos:
+
+# generate 3rd libs
+-   repo: https://github.com/asottile/seed-isort-config
+    rev: v2.2.0
+    hooks:
+    -   id: seed-isort-config
+        args: [--application-directories=api]
+
+# sorting imports
+-   repo: https://github.com/pre-commit/mirrors-isort
+    rev: v5.5.2  # Use the revision sha / tag you want to point at
+    hooks:
+    -   id: isort
+        exclude: migrations
+
+# reformat code
+-   repo: https://github.com/psf/black
+    rev: 22.6.0
+    hooks:
+    - id: black
+
+# validate PEP8
+-   repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v3.2.0
+    hooks:
+    - id: trailing-whitespace
+    - id: check-executables-have-shebangs
+    - id: debug-statements
+    - id: check-merge-conflict
+      exclude: migrations,hosting
+
+-   repo: https://github.com/pycqa/flake8
+    rev: 6.1.0
+    hooks:
+    - id: flake8
+      exclude: sql.py
+
+# mypy (static type check)
+-   repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v0.991  # Use the sha / tag you want to point at
+    hooks:
+    -   id: mypy
+        args: [--no-strict-optional, --ignore-missing-imports]
+        exclude: migrations
+
+## bandit
+#-   repo: https://github.com/Lucas-C/pre-commit-hooks-bandit
+#    sha: v1.0.4
+#    hooks:
+#    -   id: python-bandit-vulnerability-check
+#        args: ['--skip']
+#        files: .py$
+

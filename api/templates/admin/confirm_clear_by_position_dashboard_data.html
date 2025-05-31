@@ -1,0 +1,36 @@
+{% extends 'admin/base.html' %}
+
+{% block content %}
+    {% if positions_has_data %}
+      <fieldset class="module aligned ">
+      <div class="form-row label" style="margin-bottom: 10px">
+              <label class="col-sm-2 control-label" style="font-size: 15px">Please choose a position to remove from the dashboard data</label>
+      </div>
+        <form action="." method="POST" enctype="multipart/form-data">
+         {% csrf_token %}
+
+   <div class="form-row" style="margin-bottom: 10px">
+      <div class="col-sm-10">
+        <select  name="position_id" class="form-control">
+          {% for position in positions_has_data %}
+          <option value="{{ position.id }}">{{ position.position }}</option>
+          {% endfor %}
+        </select>
+      <br>
+      </div>
+    </div>
+     <div class="submit-row">
+         <input type="submit"
+           style=" background: #ba2121; border-radius: 4px; padding: 10px 15px; color: #fff;" value="Yes, I'm sure">
+         <a id="cancel_linkzzzzz" href="{{ previous_page }}" style=" display: inline-block; vertical-align: middle; height: 15px; line-height: 15px;
+    background: #ddd; border-radius: 4px; padding: 10px 15px; color: #333; margin: 0 0 0 10px;"
+      >No, take me back</a>
+     </div>
+
+      </form>
+
+      </fieldset>
+  {% else %}
+      <p>There is no position available to clear</p>
+    {% endif %}
+{% endblock %}

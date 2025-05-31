@@ -1,0 +1,88 @@
+version: '3.9'
+
+x-deploy: &deploy
+  deploy:
+    replicas: 1
+    resources:
+      limits:
+        cpus: "0.8"
+        memory: 300MB
+    restart_policy:
+      condition: on-failure
+    placement:
+      constraints:
+        - node.hostname == worker01
+
+x-networks: &networks
+  networks:
+    - backend
+
+networks:
+  backend:
+    name: kingmaker-data
+    attachable: true
+
+
+services:
+  redis:
+    image: redis:6.2.6-alpine
+    <<: *networks
+    <<: *deploy
+
+  api:
+    image: hdwhub/kingmaker-data-api:latest
+    command: /home/app/api/gunicorn.sh
+    depends_on:
+      - redis
+    volumes:
+      - /mnt/nfs/apps/kingmaker-data/config/jwt_api_key:/jwt_api_key:ro
+      - /mnt/nfs/apps/kingmaker-data/config/jwt_api_key.pub:/jwt_api_key.pub:ro
+      - /mnt/nfs/apps/kingmaker-data/media:/home/app/api/media:z
+#      - /mnt/nfs/apps/kingmaker-data/staticfiles_new:/home/app/api/staticfiles:z
+      - /mnt/nfs/apps/kingmaker-data/logs_lasted:/home/app/api/logs:z
+    env_file:
+      - /mnt/nfs/apps/kingmaker-data/config/.env
+    ports:
+      - 3042:8000
+    <<: *networks
+    <<: *deploy
+
+  celery:
+    image: hdwhub/kingmaker-data-api:latest
+    command: celery -A apps.core worker -B
+    depends_on:
+      - redis
+    volumes:
+      - /mnt/nfs/apps/kingmaker-data/config/jwt_api_key:/jwt_api_key:ro
+      - /mnt/nfs/apps/kingmaker-data/config/jwt_api_key.pub:/jwt_api_key.pub:ro
+      - /mnt/nfs/apps/kingmaker-data/celery_logs_lasted:/home/app/api/logs:z
+      - /mnt/nfs/apps/kingmaker-data/media:/home/app/api/media:z
+    env_file:
+      - /mnt/nfs/apps/kingmaker-data/config/.env
+    deploy:
+      replicas: 1
+      resources:
+        limits:
+          cpus: "0.8"
+          memory: 800MB
+      restart_policy:
+        condition: on-failure
+      placement:
+        constraints:
+          - node.hostname == worker01
+    <<: *networks
+
+  socket:
+    image: hdwhub/kingmaker-data-socket:latest
+    depends_on:
+      - redis
+    links:
+      - redis
+    volumes:
+      - /mnt/nfs/apps/kingmaker-data/config/jwt_api_key.pub:/jwt_api_key.pub:ro
+    env_file:
+      - /mnt/nfs/apps/kingmaker-data/config/.env_ws
+    ports:
+      - 3096:3000
+    <<: *networks
+    <<: *deploy

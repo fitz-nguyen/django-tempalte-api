@@ -1,0 +1,31 @@
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+  <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+    <p>Dear {{ user.name }},</p>
+
+    <p>We’re excited to let you know that your Django Template account has been successfully activated!</p>
+    <p>Get started by logging into your account below:</p>
+
+    <p>
+      <a href="{{ activate_url }}" style="display: inline-block; padding: 10px 20px; background-color: #007bff;
+               color: white; text-decoration: none; border-radius: 5px;">
+        Log in to Your Django Template Account
+      </a>
+    </p>
+
+    <p>Thank you for joining Django Template! We look forward to having you with us.</p><br>
+    <p>Best regards,<br>
+      The Django Template Team</p>
+
+    {% include "email_footer.html" %}
+
+  </div>
+</body>
+
+</html>

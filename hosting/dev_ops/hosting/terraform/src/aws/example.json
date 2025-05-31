@@ -1,0 +1,28 @@
+{
+  "config": {
+    "env": "{env}",
+    "profile": "{profile}",
+    "region": "us-east-1",
+    "account_id": "{account_id}",
+    "ssh_key_name": "{ssh_key_name}",
+    "ubuntu_ami": "ami-064a0193585662d74",
+    "domain": "{domain}",
+    "db_name": "{db_name}",
+    "db_instance_size": "db.t2.small",
+    "db_username": "{db_username}",
+    "db_password": "{db_password}",
+    "db_publically_accessible": false,
+    "vpc.cidr_block": "10.0.0.0/16",
+    "subnet_public_b_cidr_block": "10.0.64.0/20",
+    "subnet_public_c_cidr_block": "10.0.80.0/20",
+    "subnet_b_cidr_block": "10.0.16.0/20",
+    "subnet_c_cidr_block": "10.0.32.0/20",
+    "frontend_cert_arn": "{ssl_certificate_manager}",
+    "frontend_aliases": "{cloudfront_s3_folder}",
+    "tag_version": "1.0",
+    "tag_strategy": "Terraform"
+  },
+  "arns": [
+
+  ]
+}

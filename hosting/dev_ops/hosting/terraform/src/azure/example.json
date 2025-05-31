@@ -1,0 +1,35 @@
+{
+  "config": {
+    "env": "{env}",
+    "location": "{location}",
+    "subscription_id": "{subscription_id}",
+    "client_id": "{client_id}",
+    "client_secret": "{client_secret}",
+    "tenant_id": "{tenant_id}",
+    "domain": "{domain}",
+    "key_store_encryption": "{key_store_encryption}",
+    "db_edition" : "",
+    "db_username": "",
+    "db_password": "",
+    "vpc_cidr_block": "10.0.0.0/16",
+    "subnet_public_cidr_block_ip_mask": "10.0.32.%d",
+    "subnet_api_appgateway_cidr_block": "10.0.64.0/20",
+    "subnet_bastion_cidr_block": "10.0.96.0/20",
+    "subnet_public_cidr_block": "10.0.32.0/20",
+    "subnet_private_cidr_block": "10.0.0.0/20",
+    "admin_username": "",
+    "admin_password": "",
+    "jenkins_admin_username": "",
+    "jenkins_admin_password": "",
+    "api_username": "",
+    "api_password": "",
+    "api_count": 1,
+    "api_vmsize": "",
+    "api_custom_image_resource_group": "",
+    "api_custom_image_name": "",
+    "api_ssl_certificate": ""
+  },
+  "arns": [
+
+  ]
+}

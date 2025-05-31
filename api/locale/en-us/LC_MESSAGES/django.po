@@ -1,0 +1,94 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2020-04-07 03:19+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: app/chat/services/helpers/message.py:163
+#, python-format
+msgid "%s added %s to this conversation"
+msgstr ""
+
+#: app/chat/services/helpers/message.py:165
+#, python-format
+msgid "%s has left this conversation"
+msgstr ""
+
+#: app/chat/services/helpers/message.py:167
+#, python-format
+msgid "%s has removed %s from this conversation"
+msgstr ""
+
+#: app/users/admin.py:14
+msgid "Personal info"
+msgstr ""
+
+#: app/users/admin.py:16
+msgid "Permissions"
+msgstr ""
+
+#: app/users/admin.py:27
+msgid "Important dates"
+msgstr ""
+
+#: config/settings/common.py:233
+msgid "English"
+msgstr ""
+
+#: config/settings/common.py:428
+msgid "An error has occurred"
+msgstr ""
+
+#: templates/account/email/email_confirmation_message.txt:1
+#, python-format
+msgid ""
+"Hello from %(site_name)s!\n"
+"\n"
+"You're receiving this e-mail because user %(user_display)s has given yours "
+"as an e-mail address to connect their account.\n"
+"\n"
+"To confirm this is correct, go to %(activate_url)s\n"
+msgstr ""
+
+#: templates/account/email/email_confirmation_message.txt:7
+#, python-format
+msgid ""
+"Thank you from %(site_name)s!\n"
+"%(site_domain)s"
+msgstr ""
+
+#: templates/account/email/email_confirmation_signup_subject.txt:3
+#: templates/account/email/email_confirmation_subject.txt:3
+msgid "Please Confirm Your E-mail Address"
+msgstr ""
+
+#: templates/registration/password_reset_email.html:2
+msgid ""
+"You're receiving this email because you requested a password reset for your "
+"user account."
+msgstr ""
+
+#: templates/registration/password_reset_email.html:4
+msgid "Please following these information and choose a new password:"
+msgstr ""
+
+#: templates/registration/password_reset_email.html:12
+msgid "Thanks!"
+msgstr ""
+
+#: templates/registration/password_reset_subject.txt:2
+msgid "Password reset"
+msgstr ""

@@ -1,0 +1,11 @@
+{% load i18n %}{% autoescape off %}
+{% blocktrans %}
+Dear {{first_name}} {{last_name}},
+
+Thank you for signing up! You will be notified once your account is ready for use.
+{% endblocktrans %}
+{% blocktrans %}
+Best Regards,
+The Django Template Team.
+{% endblocktrans %}
+{% endautoescape %}

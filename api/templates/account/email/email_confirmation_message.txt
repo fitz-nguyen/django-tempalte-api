@@ -1,0 +1,14 @@
+{% load i18n %}{% autoescape off %}
+{% blocktrans %}
+Hi {{name}},
+
+Welcome to Django Template! Please verify your account to get started.
+{{ activate_url }}
+This link will expire in 48 hours.
+If you didn’t ask to active this account, you can ignore this email.
+{% endblocktrans %}
+{% blocktrans %}
+Thank you,
+The Django Template Team.
+{% endblocktrans %}
+{% endautoescape %}

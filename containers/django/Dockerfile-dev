@@ -1,0 +1,33 @@
+FROM python:3.7.7-alpine3.11
+
+# Prevents Python from writing pyc files to disk
+ENV PYTHONDONTWRITEBYTECODE 1
+
+# Prevents Python from buffering stdout and stderr
+ENV PYTHONUNBUFFERED 1
+
+RUN apk add --update openssl && \
+    rm -rf /var/cache/apk/*
+
+# Install dependencies
+RUN \
+ apk add --no-cache postgresql-libs && \
+ apk add --no-cache --virtual .build-deps gcc musl-dev postgresql-dev && \
+ apk add --no-cache gettext gettext-dev libffi-dev zlib-dev jpeg-dev && \
+ apk add --no-cache python3-dev libffi-dev gcc musl-dev make
+
+RUN openssl genrsa -out jwt_api_key 1024
+RUN openssl rsa -in jwt_api_key -pubout -out jwt_api_key.pub
+
+# Requirements have to be pulled and installed here, otherwise caching won't work
+COPY ./api/requirements /requirements
+RUN pip install --upgrade pip
+RUN pip install -r /requirements/local.txt
+
+COPY ./api/start-dev.sh /start-dev.sh
+RUN chmod +x /start-dev.sh
+COPY ./api/start-dev.sh /start-services.sh
+RUN chmod +x /start-services.sh
+
+
+WORKDIR /usr/src/api

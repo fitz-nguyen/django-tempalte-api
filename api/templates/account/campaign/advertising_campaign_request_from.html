@@ -1,0 +1,28 @@
+<html lang="en">
+
+<head>
+</head>
+
+<body>
+    <p>A user has submitted a new advertising campaign request. Here are the details: </p>
+    <p>User Information</p>
+    <p>Name: {{ request_name }}<br>
+        Email: {{ request_mail }}<br>
+        Phone Number: {{ request_phone }}</p>
+
+    <p>Campaign Information</p>
+    <p>Name: {{ campaign_name }}<br>
+        Format: {{ mail_format }}<br>
+        Targeting: {{ mail_audience_target }}<br>
+        Provides Design: {{ provide_design }}</p>
+
+    {% if mail_design_url %}
+    <p>Design attachments url: <a clicktracking=off href="{{ mail_design_url }}"> Attachment link </a></p>
+    {% endif %}
+    <p>CSV attachments url: <a clicktracking=off href="{{ voter_filepath }}"> Attachment link </a></p>
+
+    <p>Thank you,<br>
+        The Django Template Team.</p>
+</body>
+
+</html>

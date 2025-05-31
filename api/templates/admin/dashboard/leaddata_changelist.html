@@ -1,0 +1,23 @@
+{% extends "admin/change_list.html" %}
+{% load i18n admin_urls %}
+
+{% block object-tools %}
+    <div class="object-tools">
+        <a href="export-leads/{{ cl.get_query_string }}" class="addlink">
+            {% blocktranslate with cl.opts.verbose_name as name %}Export {{ name }}{% endblocktranslate %}
+        </a>
+    </div>
+{% endblock %}
+
+{% block pagination %}
+    {% if cl.has_previous or cl.has_next %}
+        <div class="paginator">
+            {% if cl.has_previous %}
+                <a href="{{ cl.get_query_string }}&cursor={{ cl.previous_cursor }}" class="paginator-previous">&laquo; {% trans 'Previous' %}</a>
+            {% endif %}
+            {% if cl.has_next %}
+                <a href="{{ cl.get_query_string }}&cursor={{ cl.next_cursor }}" class="paginator-next">{% trans 'Next' %} &raquo;</a>
+            {% endif %}
+        </div>
+    {% endif %}
+{% endblock %}

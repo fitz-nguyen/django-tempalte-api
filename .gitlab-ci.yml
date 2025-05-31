@@ -1,0 +1,11 @@
+include:
+  local: /.gitlab-ci-cloud.yml
+
+stages:
+  - build
+  - deploy
+  - artifict
+  - server
+  - deployment
+  - migrations
+  - environment

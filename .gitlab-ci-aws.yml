@@ -1,0 +1,137 @@
+image: "python:3.6.9"
+
+# Global --------------------------
+
+variables:
+  ENVIRONMENT: development
+  ENV: $ENVIRONMENT
+
+before_script:
+  - apt-get update -y
+  - pip install --upgrade pip
+  - pip install awscli
+
+  - mkdir -p ~/.ssh
+  - >
+    if [ "$CI_COMMIT_REF_NAME" = "main" ]; then
+      export ENVIRONMENT=production
+      export SERVERS=$PRODUCTION_DEPLOY_SERVERS
+      cat $PRODUCTION_ENV_FILE >> $(pwd)/api/config/settings/.env
+      echo -e "$PRODUCTION_SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+    elif [ "$CI_COMMIT_REF_NAME" = "staging" ]; then
+      export ENVIRONMENT=staging
+      export SERVERS=$STAGING_DEPLOY_SERVERS
+      cat $STAGING_ENV_FILE >> $(pwd)/api/config/settings/.env
+      echo -e "$STAGING_SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+    fi
+
+  - chmod 600 ~/.ssh/id_rsa
+  - '[[ -f /.dockerenv ]] && echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config'
+
+build:
+  stage: artifict
+  script:
+    - echo "Clean up"
+    - ssh ubuntu@$SERVERS "sudo rm -Rf /usr/src/api"
+    - ssh ubuntu@$SERVERS "sudo rm -Rf /usr/src/app"
+
+    # zip artifact
+    - apt-get update -y
+    - apt-get install zip unzip -y
+    - zip -r $(pwd)/$CI_JOB_STAGE-$CI_JOB_ID-dist.zip *
+
+    # distribute to server
+#    - ssh ubuntu@$SERVERS "sudo apt-get update"
+#    - ssh ubuntu@$SERVERS "sudo apt-get install unzip -y"
+    - ssh ubuntu@$SERVERS "sudo mkdir /usr/src/dist -p"
+    - ssh ubuntu@$SERVERS "sudo chown ubuntu:ubuntu /usr/src/dist"
+    - scp $(pwd)/$CI_JOB_STAGE-$CI_JOB_ID-dist.zip ubuntu@$SERVERS:/usr/src/dist
+    - ssh ubuntu@$SERVERS "sudo unzip /usr/src/dist/$CI_JOB_STAGE-$CI_JOB_ID-dist.zip -d /usr/src/app"
+    - ssh ubuntu@$SERVERS "sudo chown -Rf ubuntu:ubuntu /usr/src/app"
+
+    # set up logs
+    - ssh ubuntu@$SERVERS "rm -Rf /usr/src/app/api/logs && mkdir -p /usr/src/app/api/logs"
+
+    # create soft link
+    - ssh ubuntu@$SERVERS "sudo ln -s /usr/src/app/api /usr/src/api"
+  only:
+    - main
+    - staging
+
+install_dependencies:
+  stage: server
+  script:
+    - scp $(pwd)/api/.server-setup.sh ubuntu@$SERVERS:/usr/src/api/.server-setup.sh
+    - ssh ubuntu@$SERVERS "sudo chmod +x /usr/src/api/.server-setup.sh"
+    - ssh ubuntu@$SERVERS "sudo ENVIRONMENT=$ENVIRONMENT /usr/src/api/.server-setup.sh"
+    - ssh ubuntu@$SERVERS "rm -Rf /usr/src/api/.server-setup.sh"
+  when: manual
+  only:
+    - main
+    - staging
+
+# Setup Jobs ------------------------
+
+deploy:
+  stage: deployment
+  script:
+    - scp $(pwd)/api/config/settings/.env ubuntu@$SERVERS:/usr/src/api/config/settings/.env
+    - scp $(pwd)/api/.ci-post-deploy.sh ubuntu@$SERVERS:/usr/src/api/.ci-post-deploy.sh
+    - ssh ubuntu@$SERVERS "sudo chmod +x /usr/src/api/.ci-post-deploy.sh"
+    - ssh ubuntu@$SERVERS "sudo ENVIRONMENT=$ENVIRONMENT /usr/src/api/.ci-post-deploy.sh"
+    - ssh ubuntu@$SERVERS "rm -Rf /usr/src/api/.ci-post-deploy.sh"
+  only:
+    - main
+    - staging
+
+# DB Jobs ------------------------
+
+run_migrations:
+  stage: migrations
+  script:
+    - scp $(pwd)/api/.setup-db.sh ubuntu@$SERVERS:/usr/src/api/.setup-db.sh
+    - ssh ubuntu@$SERVERS "sudo chmod +x /usr/src/api/.setup-db.sh"
+    - ssh ubuntu@$SERVERS "sudo ENVIRONMENT=$ENVIRONMENT /usr/src/api/.setup-db.sh"
+    - ssh ubuntu@$SERVERS "rm -Rf /usr/src/api/.setup-db.sh"
+  when: manual
+  only:
+    - main
+    - staging
+
+run_db_seeds:
+  stage: migrations
+  script:
+    - scp $(pwd)/api/.setup-db-seeds.sh ubuntu@$SERVERS:/usr/src/api/.setup-db-seeds.sh
+    - ssh ubuntu@$SERVERS "sudo chmod +x /usr/src/api/.setup-db-seeds.sh"
+    - ssh ubuntu@$SERVERS "sudo ENVIRONMENT=$ENVIRONMENT /usr/src/api/.setup-db-seeds.sh"
+    - ssh ubuntu@$SERVERS "rm -Rf /usr/src/api/.setup-db-seeds.sh"
+  when: manual
+  only:
+    - main
+    - staging
+
+#  Jobs ------------------------
+
+restart_services:
+  stage: environment
+  script:
+    - scp $(pwd)/api/.start-services.sh ubuntu@$SERVERS:/usr/src/api/.start-services.sh
+    - ssh ubuntu@$SERVERS "sudo chmod +x /usr/src/api/.start-services.sh"
+    - ssh ubuntu@$SERVERS "sudo ENVIRONMENT=$ENVIRONMENT /usr/src/api/.start-services.sh"
+    - ssh ubuntu@$SERVERS "rm -Rf /usr/src/api/.start-services.sh"
+  only:
+    - main
+    - staging
+
+
+clear_celery:
+  stage: environment
+  script:
+    - scp $(pwd)/api/.clear-celery.sh ubuntu@$SERVERS:/usr/src/api/.clear-celery.sh
+    - ssh ubuntu@$SERVERS "sudo chmod +x /usr/src/api/.clear-celery.sh"
+    - ssh ubuntu@$SERVERS "sudo ENVIRONMENT=$ENVIRONMENT /usr/src/api/.clear-celery.sh"
+    - ssh ubuntu@$SERVERS "rm -Rf /usr/src/api/.clear-celery.sh"
+  when: manual
+  only:
+    - main
+    - staging

@@ -1,0 +1,16 @@
+{% extends 'admin/base.html' %}
+{% block content %}
+<div>
+  {% if not is_process_running %}
+
+    <form action="." method="POST" enctype="multipart/form-data">
+    {{ form.as_p }}
+    {% csrf_token %}
+    <input class="default" style="float: left" type="submit" value="Upload CSV">
+  {% else %}
+      <p>There is a process of import csv file is running. Please wait a second</p>
+    {% endif %}
+    </form>
+</div>
+<br />
+{% endblock %}

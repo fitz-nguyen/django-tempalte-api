@@ -1,0 +1,25 @@
+{% load i18n %}{% autoescape off %}
+{% blocktrans %}
+A user has submitted a new advertising campaign request. Here are the details:
+User Information
+Name: {{ request_name }}
+Email: {{ request_mail }}
+Phone Number: {{ request_phone }}
+
+Campaign Information
+Name: {{ campaign_name }}
+Format: {{ mail_format }}
+Targeting: {{ mail_audience_target }}
+Provides Design: {{ provide_design }}
+
+{% endblocktrans %}
+{% if mail_design_url %}
+Design attachments url: {{ mail_design_url }}
+{% endif %}
+CSV attachments url: {{ voter_filepath }}
+
+{% blocktrans %}
+Thank you,
+The Django Template Team.
+{% endblocktrans %}
+{% endautoescape %}

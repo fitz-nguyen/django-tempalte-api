@@ -1,0 +1,5 @@
+node_modules
+api/staticfiles
+api/media
+api/virtualenv
+containers/data

@@ -1,0 +1,68 @@
+include:
+  local: /.gitlab-ci-aws.yml
+
+.env cloud: &env_cloud
+  environment:
+    name: cloud
+    url: https://django-template.dev.com
+
+.var cloud: &var_cloud
+  variables:
+    SSH_HOST: $CLOUD_HOST
+    SSH_USER: $CLOUD_USER
+    SSH_PKEY: $CLOUD_SSH_KEY
+
+    DOCKER_API_IMAGE: "hdwhub/django-template-api:latest"
+    PROJECT_ROOT: "~/data/django-template"
+    STACK_NAME: "django-template"
+
+.setup ssh: &setup_ssh
+  before_script:
+    - which ssh-agent || ( apt-get update -y && apt-get install openssh-client -y )
+    - eval $(ssh-agent -s)
+    - echo "${SSH_PKEY}" | tr -d '\r' | ssh-add - > /dev/null
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
+    - ssh-keyscan -H "${SSH_HOST}" > ~/.ssh/known_hosts
+    - chmod 644 ~/.ssh/known_hosts
+
+.build docker: &build_docker_images
+  image: docker:latest
+  services:
+    - docker:dind
+  before_script:
+    - echo "$DOCKER_PASSWORD" | docker login -u $DOCKER_USER --password-stdin
+  script:
+    - docker build --pull -f containers/django/Dockerfile -t $DOCKER_API_IMAGE .
+    - docker push $DOCKER_API_IMAGE
+
+.deploy stack: &deploy_stack
+  <<: *setup_ssh
+  script:
+    - echo "deploying to ${PROJECT_ROOT}"
+    - cat ${CLOUD_ENV_FILE} > $(pwd)/.env
+    - scp $(pwd)/.env "${SSH_USER}@${SSH_HOST}:${PROJECT_ROOT}/config"
+    - echo "rm env file"
+    - rm -f $(pwd)/.env
+    - echo "deploy image"
+    - ssh "$SSH_USER@$SSH_HOST" "cd ${PROJECT_ROOT} && docker stack deploy -c stack-be/stack.yml --with-registry-auth $STACK_NAME"
+
+cloud-build:
+  stage: build
+  only:
+    - develop
+  #tags:
+  #  - docker
+  <<: *env_cloud
+  <<: *var_cloud
+  <<: *build_docker_images
+
+cloud-deploy:
+  stage: deploy
+  only:
+    - develop
+  #tags:
+  #  - docker
+  <<: *env_cloud
+  <<: *var_cloud
+  <<: *deploy_stack

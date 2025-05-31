@@ -1,0 +1,12 @@
+{% load i18n %}{% autoescape off %}
+{% blocktrans %}
+Dear {{ to_user }},
+
+Thank you for submitting your {{ campaign_name }} advertising campaign request on Django Template. We have received your request and are processing it accordingly.
+
+{% endblocktrans %}
+{% blocktrans %}
+Thank you,
+The Django Template Team.
+{% endblocktrans %}
+{% endautoescape %}

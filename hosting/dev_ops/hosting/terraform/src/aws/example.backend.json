@@ -1,0 +1,5 @@
+{
+  "bucket": "terraform-states",
+  "region": "us-east-1",
+  "key": "vpc/state.tfstate"
+}

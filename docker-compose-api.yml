@@ -1,0 +1,116 @@
+version: '3'
+
+volumes:
+  ipython_data:
+  api_staticfiles:
+  api_media:
+
+services:
+
+  api:
+    image: template-api
+    build:
+      context: .
+      dockerfile: containers/django/Dockerfile
+    command: /usr/src/api/gunicorn.sh
+    depends_on:
+      - pgbouncer
+      - redis
+    environment:
+      - DJANGO_SETTINGS_MODULE=config.settings.local
+      #- DATABASE_URL=postgresql://dbadmin:pA55w0rd!@development.clur3vk7dq2s.us-east-1.rds.amazonaws.com:5432/development
+    env_file:
+      - ./containers/.envs/.local/.django
+    volumes:
+      - ./api:/usr/src/api
+      - api_staticfiles:/usr/src/api_staticfiles
+      - api_media:/usr/src/api_media
+      - ipython_data:/root/.ipython
+    links:
+      - pgbouncer
+      - redis
+
+  worker:
+    build:
+      context: .
+      dockerfile: containers/django/Dockerfile
+    command: "celery -A app.core worker -P gevent -c 5"
+    depends_on:
+      - pgbouncer
+      - redis
+    environment:
+      - DJANGO_SETTINGS_MODULE=config.settings.local
+    env_file:
+      - ./containers/.envs/.local/.django
+    volumes:
+      - ./api:/usr/src/api
+      - api_staticfiles:/usr/src/api_staticfiles
+      - api_media:/usr/src/api_media
+    links:
+      - pgbouncer
+      - redis
+
+  beat:
+    build:
+      context: .
+      dockerfile: containers/django/Dockerfile
+    command: "celery -A app.core beat"
+    depends_on:
+      - pgbouncer
+      - redis
+    environment:
+      - DJANGO_SETTINGS_MODULE=config.settings.local
+    env_file:
+      - ./containers/.envs/.local/.celery
+    volumes:
+      - ./api:/usr/src/api
+      - api_staticfiles:/usr/src/api_staticfiles
+      - api_media:/usr/src/api_media
+    links:
+      - pgbouncer
+      - redis
+
+  nginx:
+    build:
+      context: .
+      dockerfile: containers/nginx/Dockerfile
+    volumes:
+      - ./containers/nginx/conf.d:/etc/nginx/conf.d
+      - ./containers/nginx/sites-enabled:/etc/nginx/sites-enabled
+      - ./api:/usr/src/api
+      - api_staticfiles:/usr/src/api_staticfiles
+      - api_media:/usr/src/api_media
+    links:
+      - api
+    ports:
+      - 8000:80
+
+  postgres:
+    build:
+      context: .
+      dockerfile: containers/postgres/Dockerfile
+    volumes:
+      - ./containers/data/postgres:/var/lib/postgresql/data
+      - ./backups:/backups
+    env_file:
+      - ./containers/.envs/.local/.postgres
+    ports:
+      - 5432:5432
+
+  pgbouncer:
+    build:
+      context: .
+      dockerfile: containers/pgbouncer/Dockerfile
+      args:
+        PGBOUNCER_VERSION: 1.14.0
+    depends_on:
+      - postgres
+    env_file:
+      - ./containers/.envs/.local/.postgres
+    links:
+      - postgres
+    ports:
+      - 6432:6432
+
+  redis:
+    image: redis:6.0-rc4-alpine

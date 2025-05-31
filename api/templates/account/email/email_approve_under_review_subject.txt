@@ -1,0 +1,3 @@
+{% load i18n %}{% autoescape off %}
+{% blocktrans %} Welcome to Django Template! Active your account {% endblocktrans %}
+{% endautoescape %}

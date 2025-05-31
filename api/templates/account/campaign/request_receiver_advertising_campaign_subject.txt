@@ -1,0 +1,4 @@
+{% load i18n %}{% autoescape off %}
+{% blocktrans %}  Django Template - Advertising Campaign {{campaign_name}} Request Received
+{% endblocktrans %}
+{% endautoescape %}

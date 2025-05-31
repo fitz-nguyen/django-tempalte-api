@@ -1,0 +1,13 @@
+{% load i18n %}{% autoescape off %}
+{% blocktrans %}
+Hi {{name}},
+
+Congratulations - Your Django Template demo account is ready!
+{{ login_link }}
+{% endblocktrans %}
+{% blocktrans %}
+Thank you,
+The Django Template Team.
+{% endblocktrans %}
+{% endautoescape %}
+

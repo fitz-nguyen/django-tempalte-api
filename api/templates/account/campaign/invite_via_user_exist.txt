@@ -1,0 +1,13 @@
+{% load i18n %}{% autoescape off %}
+{% blocktrans %}
+Hi  {{ to_user }},
+
+You have been invited to join the {{ campaign_name  }} campaign owned by {{ candidate_name }} on Kingmarker Data. To get started, accept the invite below:
+{{ activate_url }}
+This invitation will expire in 7 days. If it's a mistake, please simply ignore this email.
+{% endblocktrans %}
+{% blocktrans %}
+Thank you,
+The Django Template Team.
+{% endblocktrans %}
+{% endautoescape %}
