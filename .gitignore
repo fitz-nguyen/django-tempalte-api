@@ -50,6 +50,5 @@ jwt_*
 
 env
 venv
-api/kingmakerdata.csv
 *.DS_Store
 **/google-services.json
